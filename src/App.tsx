@@ -3,7 +3,6 @@ import './App.css'
 
 // TODO:
 // - Review the formulas that generate the new speed vectors after collision to take into account the ball shapes and bounce them taking into account the collision angle.
-// - Try to allow player movements using the mouse
 
 //--------------------------------------------------
 // Game State
@@ -19,31 +18,61 @@ let player: Ball = {
 let dirty = false
 let balls: Ball[] = []
 let collisionsCount = 0
+let ctx2D: CanvasRenderingContext2D | null = null
+let movingWithMouse = false
 //--------------------------------------------------
 const GAME_LOOP_CALL_INTERVAL_MS = 1
 let gameLoopCalls = 0
-function gameLoop(deltaMs: number) {
+function gameLoop(deltaMs: number, ctx2D: CanvasRenderingContext2D) {
     gameLoopCalls++
-    const screen: HTMLCanvasElement | null = document.getElementById('gameScreen') as HTMLCanvasElement
-    if (screen) {
-        const ctx2D: CanvasRenderingContext2D | null = screen.getContext('2d')
-        if (ctx2D) {
-            // Game Logic
-            dirty = false
-            if (gameLoopCalls===1) {
-                initialize(ctx2D)
-            }
-            processKeys(ctx2D)
-            detectCollisions(ctx2D)
-            moveBalls(ctx2D)
-            if (dirty) {
-                drawObjects(ctx2D)
+    // Game Logic
+    dirty = false
+    if (gameLoopCalls===1) {
+        initialize(ctx2D)
+    }
+    processKeys(ctx2D)
+    detectCollisions(ctx2D)
+    moveBalls(ctx2D)
+    if (dirty) {
+        drawObjects(ctx2D)
+    }
+    setTimeout(callGameLoop, GAME_LOOP_CALL_INTERVAL_MS)
+}
+setTimeout(callGameLoop, GAME_LOOP_CALL_INTERVAL_MS)
+
+function callGameLoop() {
+    if (!ctx2D) {
+        const canvas: HTMLCanvasElement | null = document.getElementById('gameScreen') as HTMLCanvasElement
+        if (canvas) {
+            const currentCtx2D: CanvasRenderingContext2D | null = canvas.getContext('2d')
+            if (currentCtx2D) {
+                ctx2D = currentCtx2D
+                canvas.addEventListener('mousemove', function(evt) {
+                    const rect = canvas.getBoundingClientRect();
+                    const mouseX = evt.offsetX * (ctx2D?.canvas.width ?? 0) / rect.width
+                    const mouseY = evt.offsetY * (ctx2D?.canvas.height ?? 0) / rect.height
+                    if (movingWithMouse) {
+                        if (mouseX > player.radius && mouseX < (ctx2D?.canvas.width ?? 0) - player.radius && mouseY > player.radius && mouseY < (ctx2D?.canvas.height ?? 0) - player.radius) {
+                            player.posX = mouseX
+                            player.posY = mouseY
+                        }
+                    }
+                  }, false);
+
+                canvas.addEventListener('mousedown', function(evt) {
+                    movingWithMouse = true;
+                }, false);
+                canvas.addEventListener('mouseup', function(evt) {
+                    movingWithMouse = false;
+                }, false);
+
             }
         }
     }
-    setTimeout(() => gameLoop(deltaTimeFromLastCall()), GAME_LOOP_CALL_INTERVAL_MS)
+    if (ctx2D) {
+        gameLoop(deltaTimeFromLastCall(), ctx2D)
+    }
 }
-setTimeout(() => gameLoop(deltaTimeFromLastCall()), GAME_LOOP_CALL_INTERVAL_MS)
 //--------------------------------------------------
 type Ball = {
     posX: number
@@ -68,7 +97,7 @@ function initialize(ctx2D: CanvasRenderingContext2D) {
             radius,
             color: getRandomColor() + "AA"
         }
-        if (!checkCollision(ball, player)) {
+        if (!checkCollision(ball, player) && ! balls.some(existingBall => checkCollision(ball, existingBall))) {
             balls.push(ball)
         }
     }
