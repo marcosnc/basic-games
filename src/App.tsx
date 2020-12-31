@@ -15,11 +15,14 @@ let player: Ball = {
     speedX: 0,
     speedY: 0
 }
+const BALLS_COUNT = 10
+const MAX_COLLISIONS = 25
 let dirty = false
 let balls: Ball[] = []
 let collisionsCount = 0
 let ctx2D: CanvasRenderingContext2D | null = null
 let movingWithMouse = false
+let timePlayed: number | undefined = undefined
 //--------------------------------------------------
 const GAME_LOOP_CALL_INTERVAL_MS = 1
 let gameLoopCalls = 0
@@ -87,7 +90,7 @@ function initialize(ctx2D: CanvasRenderingContext2D) {
     player.posX = ctx2D.canvas.width / 2
     player.posY = ctx2D.canvas.height / 2
 
-    while( balls.length < 10) {
+    while( balls.length < BALLS_COUNT) {
         let radius = randomInt(5, 20)
         let ball = {
             posX: radius + randomInt(0, ctx2D.canvas.width - 2*radius),
@@ -208,6 +211,12 @@ function drawObjects(ctx2D: CanvasRenderingContext2D) {
     }
     drawCircle(ctx2D, player.posX, player.posY, player.radius, player.color)
     drawText(ctx2D, 10, 20, 'Collisions: ' + collisionsCount, '#d40707')
+    if (collisionsCount > MAX_COLLISIONS) {
+        if (!timePlayed) {
+            timePlayed = (Date.now() - startTimeMs) / 1000
+        }
+        drawText(ctx2D, 10, 50, 'Time Played: ' + timePlayed, '#d40707')
+    }
 }
 //--------------------------------------------------
 const startTimeMs = Date.now()
