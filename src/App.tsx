@@ -109,16 +109,16 @@ function initialize(ctx2D: CanvasRenderingContext2D) {
 }
 //--------------------------------------------------
 function processKeys(ctx2D: CanvasRenderingContext2D) {
-    if ((isKeyPressed(KEY_LEFT) || isKeyPressed(KEY_A)) && player.posX > player.radius) {
+    if (isAnyKeyPressed([KEY_LEFT, KEY_A]) && player.posX > player.radius) {
         player.posX--; dirty = true
     }
-    if ((isKeyPressed(KEY_RIGHT) || isKeyPressed(KEY_D)) && player.posX < ctx2D.canvas.width - player.radius) {
+    if (isAnyKeyPressed([KEY_RIGHT, KEY_D]) && player.posX < ctx2D.canvas.width - player.radius) {
         player.posX++; dirty = true
     }
-    if ((isKeyPressed(KEY_UP) || isKeyPressed(KEY_W)) && player.posY > player.radius) {
+    if (isAnyKeyPressed([KEY_UP, KEY_W]) && player.posY > player.radius) {
         player.posY--; dirty = true
     }
-    if ((isKeyPressed(KEY_DOWN) || isKeyPressed(KEY_S)) && player.posY < ctx2D.canvas.height - player.radius) {
+    if (isAnyKeyPressed([KEY_DOWN, KEY_S]) && player.posY < ctx2D.canvas.height - player.radius) {
         player.posY++; dirty = true
     }
 }
@@ -242,6 +242,9 @@ document.addEventListener('keyup', event => {
 });
 function isKeyPressed(key: number): boolean {
     return pressedKeys.has(key)
+}
+function isAnyKeyPressed(keys: number[]): boolean {
+    return keys.some(key => isKeyPressed(key))
 }
 //--------------------------------------------------
 function drawCircle(ctx2D: CanvasRenderingContext2D, x:number, y:number, radius: number, color: string) {

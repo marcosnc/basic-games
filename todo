@@ -1,7 +1,3 @@
-- Improve keys management
-  function areKeysPressed(keys1: number[], keys2: number[], ...): boolean
-    Should return true if all the keys in keys1 are pressed, or all the keys in keys2 are pressed, etc
-
 - Allow to have several mini-games
 
 - Create a mini-game to move a circle through a maze
