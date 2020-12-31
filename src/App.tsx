@@ -2,9 +2,6 @@ import React from 'react'
 import './App.css'
 
 // TODO:
-// - Avoid Ball.stepsAfterCollision because a ball won't collide with a second ball near it.
-//   Maybe we can keep a list of ball collisions to avoid keep colliding the ball
-//   Another possible option is change the checkCollision method to check not only the distance but also de speed vectors and return true only when they will intersect
 // - Review the formulas that generate the new speed vectors after collision to take into account the ball shapes and bounce them taking into account the collision angle.
 // - Try to allow player movements using the mouse
 
@@ -17,8 +14,7 @@ let player: Ball = {
     color: "#24709c",
     radius: 25,
     speedX: 0,
-    speedY: 0,
-    stepsAfterCollision: 0
+    speedY: 0
 }
 let dirty = false
 let balls: Ball[] = []
@@ -56,7 +52,6 @@ type Ball = {
     speedY: number
     radius: number
     color: string
-    stepsAfterCollision: number
 }
 //--------------------------------------------------
 function initialize(ctx2D: CanvasRenderingContext2D) {
@@ -71,8 +66,7 @@ function initialize(ctx2D: CanvasRenderingContext2D) {
             speedX: randomInt(0, 100) - 50,
             speedY: randomInt(0, 100) - 50,
             radius,
-            color: getRandomColor() + "AA",
-            stepsAfterCollision: 0
+            color: getRandomColor() + "AA"
         }
         if (!checkCollision(ball, player)) {
             balls.push(ball)
@@ -98,13 +92,12 @@ function processKeys(ctx2D: CanvasRenderingContext2D) {
 }
 //--------------------------------------------------
 function moveBalls(ctx2D: CanvasRenderingContext2D) {
-    balls.forEach(ball => {
-        if (Math.abs(ball.speedX)>0.001 || Math.abs(ball.speedY)>0.001) {
-            ball.posX = Math.min(Math.max(ball.posX + ball.speedX / 30.0, ball.radius), ctx2D.canvas.width - ball.radius)
-            ball.posY = Math.min(Math.max(ball.posY + ball.speedY / 30.0, ball.radius), ctx2D.canvas.height - ball.radius)
-        }
-    })
+    balls.forEach(ball => moveBall(ball, ctx2D))
     dirty=true
+}
+function moveBall(ball:Ball, ctx2D: CanvasRenderingContext2D) {
+    ball.posX = Math.min(Math.max(ball.posX + ball.speedX / 30.0, ball.radius), ctx2D.canvas.width - ball.radius)
+    ball.posY = Math.min(Math.max(ball.posY + ball.speedY / 30.0, ball.radius), ctx2D.canvas.height - ball.radius)
 }
 //--------------------------------------------------
 function detectCollisions(ctx2D: CanvasRenderingContext2D) {
@@ -117,42 +110,47 @@ function detectCollisions(ctx2D: CanvasRenderingContext2D) {
         if (ball.posY <= ball.radius || ball.posY >= ctx2D.canvas.height - ball.radius) {
             ball.speedY = -ball.speedY
         }
-        if (ball.stepsAfterCollision===0) {
-            if (checkCollision(ball, player)) {
-                collisionsCount++
-                // This is not taking into account the collision angle
-                let playerMass = 100000.0
-                ball.speedX  = (ball.speedX * (ball.radius - playerMass) + (2.0 * playerMass * player.speedX)) / (ball.radius + playerMass)
-                ball.speedY  = (ball.speedY * (ball.radius - playerMass) + (2.0 * playerMass * player.speedY)) / (ball.radius + playerMass)
-
-                ball.stepsAfterCollision = 5
+        if (checkCollision(ball, player)) {
+            collisionsCount++
+            // This is not taking into account the collision angle
+            let playerMass = 100000.0
+            ball.speedX  = (ball.speedX * (ball.radius - playerMass) + (2.0 * playerMass * player.speedX)) / (ball.radius + playerMass)
+            ball.speedY  = (ball.speedY * (ball.radius - playerMass) + (2.0 * playerMass * player.speedY)) / (ball.radius + playerMass)
+            let movesLeft = 30
+            while(movesLeft>0 && checkCollision(ball, player)) {
+                moveBall(ball, ctx2D)
+                movesLeft--
             }
-            if (!alreadyCollided.has(i)) {
-                for(let j=i+1; j<balls.length; j++) {
-                    let ball2 = balls[j]
-                    if (!alreadyCollided.has(j) && ball2.stepsAfterCollision===0) {
-                        if (checkCollision(ball, ball2)) {
-                            // This is not taking into account the collision angle
-                            let ballNewSpeedX  = (ball.speedX *(ball.radius -ball2.radius) + (2.0*ball2.radius*ball2.speedX)) / (ball.radius +ball2.radius)
-                            let ballNewSpeedY  = (ball.speedY *(ball.radius -ball2.radius) + (2.0*ball2.radius*ball2.speedY)) / (ball.radius +ball2.radius)
-                            let ball2NewSpeedX = (ball2.speedX*(ball2.radius-ball.radius ) + (2.0*ball.radius *ball.speedX )) / (ball2.radius+ball.radius )
-                            let ball2NewSpeedY = (ball2.speedY*(ball2.radius-ball.radius ) + (2.0*ball.radius *ball.speedY )) / (ball2.radius+ball.radius )
-                            ball.speedX = ballNewSpeedX
-                            ball.speedY = ballNewSpeedY
-                            ball.stepsAfterCollision = 5
-                            ball2.speedX = ball2NewSpeedX
-                            ball2.speedY = ball2NewSpeedY
-                            ball2.stepsAfterCollision = 5
-                            alreadyCollided.add(i)
-                            alreadyCollided.add(j)
-                        }
+            moveBall(ball, ctx2D)
+            if (checkCollision(ball, player)) {
+                ball.posX = ctx2D.canvas.width - player.posX
+                ball.posY = ctx2D.canvas.height - player.posY
+            }
+
+        }
+        if (!alreadyCollided.has(i)) {
+            for(let j=i+1; j<balls.length; j++) {
+                let ball2 = balls[j]
+                if (!alreadyCollided.has(j)) {
+                    if (checkCollision(ball, ball2)) {
+                        // This is not taking into account the collision angle
+                        let ballNewSpeedX  = (ball.speedX *(ball.radius -ball2.radius) + (2.0*ball2.radius*ball2.speedX)) / (ball.radius +ball2.radius)
+                        let ballNewSpeedY  = (ball.speedY *(ball.radius -ball2.radius) + (2.0*ball2.radius*ball2.speedY)) / (ball.radius +ball2.radius)
+                        let ball2NewSpeedX = (ball2.speedX*(ball2.radius-ball.radius ) + (2.0*ball.radius *ball.speedX )) / (ball2.radius+ball.radius )
+                        let ball2NewSpeedY = (ball2.speedY*(ball2.radius-ball.radius ) + (2.0*ball.radius *ball.speedY )) / (ball2.radius+ball.radius )
+                        ball.speedX = ballNewSpeedX
+                        ball.speedY = ballNewSpeedY
+                        moveBall(ball, ctx2D)
+                        ball2.speedX = ball2NewSpeedX
+                        ball2.speedY = ball2NewSpeedY
+                        moveBall(ball2, ctx2D)
+                        alreadyCollided.add(i)
+                        alreadyCollided.add(j)
                     }
                 }
             }
-        } else {
-            ball.stepsAfterCollision--
         }
-    }
+}
 }
 function checkCollision(ball1: Ball, ball2: Ball): boolean {
     let distance = Math.sqrt(Math.pow(ball1.posX-ball2.posX, 2) + Math.pow(ball1.posY-ball2.posY, 2))
@@ -180,7 +178,7 @@ function drawObjects(ctx2D: CanvasRenderingContext2D) {
         }
     }
     drawCircle(ctx2D, player.posX, player.posY, player.radius, player.color)
-    drawText(ctx2D, 10, 10, 'Collisions: ' + collisionsCount, 'red')
+    drawText(ctx2D, 10, 20, 'Collisions: ' + collisionsCount, '#d40707')
 }
 //--------------------------------------------------
 const startTimeMs = Date.now()
@@ -218,10 +216,9 @@ function drawCircle(ctx2D: CanvasRenderingContext2D, x:number, y:number, radius:
     ctx2D.closePath()
 }
 function drawText(ctx2D: CanvasRenderingContext2D, x:number, y:number, text: string, color: string) {
-    ctx2D.beginPath()
     ctx2D.fillStyle = color;
+    ctx2D.font = 'bold 14px sans-serif'
     ctx2D.fillText(text, x, y)
-    ctx2D.closePath()
 }
 function randomInt(lower: number, upper: number): number {
     return Math.floor((Math.random() * (upper - lower)) + lower)
