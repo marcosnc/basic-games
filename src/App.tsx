@@ -2,6 +2,7 @@ import React from 'react'
 import './App.css'
 import { BouncingGame } from './bouncing'
 import { MiniGame } from './commons'
+import { MovingBallGame } from './moving-ball'
 
 function App() {
 
@@ -19,16 +20,6 @@ function App() {
         game = newGame
     }
     //--------------------------------------------------
-    function gameLoop(deltaMs: number, ctx2D: CanvasRenderingContext2D) {
-        gameLoopCalls++
-
-        if (gameLoopCalls===1) {
-            ctx2D.clearRect(0, 0, ctx2D.canvas.width, ctx2D.canvas.height)
-            game?.initialize(ctx2D, startTimeMs)
-        }
-        game?.loop(ctx2D, deltaMs)
-    }
-    //--------------------------------------------------
     setTimeout(callGameLoop, GAME_LOOP_CALL_INTERVAL_MS)
     function callGameLoop() {
         if (game) {
@@ -42,9 +33,13 @@ function App() {
                 }
             }
             if (ctx2D) {
-                gameLoop(
-                    deltaTimeFromLastCall(),
-                    ctx2D)
+                gameLoopCalls++
+
+                if (gameLoopCalls===1) {
+                    ctx2D.clearRect(0, 0, ctx2D.canvas.width, ctx2D.canvas.height)
+                    game?.initialize(ctx2D, startTimeMs)
+                }
+                game?.loop(ctx2D, deltaTimeFromLastCall())
             }
         }
         setTimeout(callGameLoop, GAME_LOOP_CALL_INTERVAL_MS)
@@ -65,6 +60,10 @@ function App() {
         })
     }
     //--------------------------------------------------
+    function showMovingBallGame() {
+        restart(new MovingBallGame())
+    }
+    //--------------------------------------------------
     function showBouncingGame() {
         restart(new BouncingGame())
     }
@@ -74,6 +73,7 @@ function App() {
             <canvas id="gameScreen" width="500" height="500"></canvas>
             <div>
                 <button className="GameSelectorButton" onClick={showBlankGame} >Blank</button>
+                <button className="GameSelectorButton" onClick={showMovingBallGame}>Moving Ball</button>
                 <button className="GameSelectorButton" onClick={showBouncingGame}>Bouncing Game</button>
             </div>
         </div>
