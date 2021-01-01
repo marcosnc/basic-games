@@ -1,4 +1,4 @@
-import { drawCircle, isAnyKeyPressed, KEY_A, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_S, KEY_UP, MiniGame } from "./commons"
+import { drawCircle, isAnyKeyPressed, KEY_A, KEY_D, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_S, KEY_UP, KEY_W, MiniGame } from "./commons"
 
 export class MovingBallGame implements MiniGame {
     private player: Ball = {
@@ -27,10 +27,10 @@ export class MovingBallGame implements MiniGame {
         if (isAnyKeyPressed([KEY_LEFT, KEY_A]) && this.player.posX > this.player.radius) {
             this.player.posX--; this.dirty = true
         }
-        if (isAnyKeyPressed([KEY_RIGHT, KEY_A]) && this.player.posX < ctx2D.canvas.width - this.player.radius) {
+        if (isAnyKeyPressed([KEY_RIGHT, KEY_D]) && this.player.posX < ctx2D.canvas.width - this.player.radius) {
             this.player.posX++; this.dirty = true
         }
-        if (isAnyKeyPressed([KEY_UP, KEY_A]) && this.player.posY > this.player.radius) {
+        if (isAnyKeyPressed([KEY_UP, KEY_W]) && this.player.posY > this.player.radius) {
             this.player.posY--; this.dirty = true
         }
         if (isAnyKeyPressed([KEY_DOWN, KEY_S]) && this.player.posY < ctx2D.canvas.height - this.player.radius) {
