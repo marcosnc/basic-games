@@ -38,8 +38,8 @@ export function drawText(ctx2D: CanvasRenderingContext2D, x:number, y:number, te
     ctx2D.font = 'bold 14px sans-serif'
     ctx2D.fillText(text, x, y)
 }
-export function randomInt(lower: number, upper: number): number {
-    return Math.floor((Math.random() * (upper - lower)) + lower)
+export function randomInt(lowerIncluded: number, upperExcluded: number): number {
+    return Math.floor((Math.random() * (upperExcluded - lowerIncluded)) + lowerIncluded)
 }
 export function getRandomColor() {
     var letters = '0123456789ABCDEF'
