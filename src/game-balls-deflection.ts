@@ -1,6 +1,7 @@
 import { drawCircle, MiniGame } from "./commons"
 
 enum Direction {
+    NONE,
     LEFT,
     RIGHT,
     UP,
@@ -12,6 +13,7 @@ export class BallsDeflectorsGame implements MiniGame {
     private deflectors: Deflector[] = []
     private ball: Ball = {posX:-1, posY:-1, direction: Direction.UP}
     private lastHittedDeflector: Deflector | undefined = undefined
+    private target: Target = {posX:-1, posY: -1, radius: -1}
     private dirty = false
 
     public initialize(ctx2D: CanvasRenderingContext2D, initTimeMs: number): void {
@@ -46,10 +48,36 @@ export class BallsDeflectorsGame implements MiniGame {
             direction: Direction.DOWN
         }
 
+        const targetWall = Math.random()
+        if (targetWall < 0.25) {
+            // Top Wall
+            this.target.posX = (1 + Math.floor(Math.random() * cols)) * ctx2D.canvas.width / (cols+1.0)
+            this.target.posY = 0
+        } else if (targetWall < 0.50) {
+            // Right Wall
+            this.target.posX = ctx2D.canvas.width
+            this.target.posY = (1 + Math.floor(Math.random() * rows)) * ctx2D.canvas.height / (rows+1.0)
+        } else if (targetWall < 0.75) {
+            // Bottom Wall
+            this.target.posX = (1 + Math.floor(Math.random() * cols)) * ctx2D.canvas.width  / (cols+1.0)
+            this.target.posY = ctx2D.canvas.height
+        } else {
+            // Left Wall
+            this.target.posX = 0
+            this.target.posY = (1 + Math.floor(Math.random() * rows)) * ctx2D.canvas.height / (rows+1.0)
+        }
+        this.target.radius = 10
+
         this.drawObjects(ctx2D)
     }
 
     public loop(ctx2D: CanvasRenderingContext2D, deltaMs: number): void {
+        if (Math.abs(this.ball.posX-this.target.posX)<=2.0 && Math.abs(this.ball.posY-this.target.posY)<=2.0) {
+            // Taget hitted
+            this.ball.posX = this.target.posX
+            this.ball.posY = this.target.posY
+            this.ball.direction = Direction.NONE
+        }
         this.moveBall(ctx2D)
         if (this.dirty) {
             this.drawObjects(ctx2D)
@@ -130,7 +158,9 @@ export class BallsDeflectorsGame implements MiniGame {
             ctx2D.stroke()
         })
 
-        drawCircle(ctx2D,this.ball.posX, this.ball.posY, 5, "blue")
+        drawCircle(ctx2D, this.target.posX, this.target.posY, this.target.radius, "green")
+
+        drawCircle(ctx2D, this.ball.posX, this.ball.posY, 5, "blue")
 
         this.dirty = false
     }
@@ -154,4 +184,10 @@ type Ball = {
     posX: number
     posY: number
     direction: Direction
+}
+
+type Target = {
+    posX: number
+    posY: number
+    radius: number
 }
