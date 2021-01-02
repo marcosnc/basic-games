@@ -1,4 +1,4 @@
-import { drawCircle, MiniGame, randomInt } from "./commons"
+import { drawCircle, drawText, MiniGame, randomInt } from "./commons"
 
 enum Direction {
     NONE,
@@ -20,8 +20,15 @@ export class BallsDeflectorsGame implements MiniGame {
     private lastHittedDeflector: Deflector | undefined = undefined
     private target: Target = {x:-1, y: -1, radius: -1}
     private dirty = false
+    private initTimeMs: number = 0
+    private targetHitted = false
+    private timePlayed: number | undefined = undefined
+    private bouncesCount: number = 0
 
     public initialize(ctx2D: CanvasRenderingContext2D, initTimeMs: number): void {
+        this.initTimeMs = initTimeMs
+        this.bouncesCount = 0
+
         const game = this
         ctx2D.canvas.addEventListener('mousedown', function(evt) {
             const rect = ctx2D.canvas.getBoundingClientRect();
@@ -72,11 +79,13 @@ export class BallsDeflectorsGame implements MiniGame {
     }
 
     public loop(ctx2D: CanvasRenderingContext2D, deltaMs: number): void {
-        if (near(this.ball, this.target, 2.0)) {
+        if (near(this.ball, this.target, 2.0) && this.ball.direction!==Direction.NONE) {
             // Taget hitted
+            this.targetHitted = true
             this.ball.x = this.target.x
             this.ball.y = this.target.y
             this.ball.direction = Direction.NONE
+            this.timePlayed = (Date.now() - this.initTimeMs) / 1000
         }
         this.moveBall(ctx2D)
         if (this.dirty) {
@@ -87,19 +96,20 @@ export class BallsDeflectorsGame implements MiniGame {
     private moveBall(ctx2D: CanvasRenderingContext2D) {
         // Check ball collisions with edges
         if (this.ball.x<=0 && this.ball.direction===Direction.LEFT) {
-            this.ball.direction=Direction.RIGHT
+            this.ball.direction=Direction.RIGHT; this.bouncesCount++
         } else if (this.ball.x>=ctx2D.canvas.width && this.ball.direction===Direction.RIGHT) {
-            this.ball.direction=Direction.LEFT
+            this.ball.direction=Direction.LEFT; this.bouncesCount++
         } else  if (this.ball.y<=0 && this.ball.direction===Direction.UP) {
-            this.ball.direction=Direction.DOWN
+            this.ball.direction=Direction.DOWN; this.bouncesCount++
         } else if (this.ball.y>=ctx2D.canvas.height && this.ball.direction===Direction.DOWN) {
-            this.ball.direction=Direction.UP
+            this.ball.direction=Direction.UP; this.bouncesCount++
         }
 
         // Check ball collisions with deflectors
         const hittedDeflector = this.deflectors.find(deflector => near(this.ball, deflector, 3.0))
         if (hittedDeflector) {
             if (!this.lastHittedDeflector || hittedDeflector!==this.lastHittedDeflector) {
+                ; this.bouncesCount++
                 this.lastHittedDeflector = hittedDeflector
                 this.ball.x = hittedDeflector.x
                 this.ball.y = hittedDeflector.y
@@ -153,6 +163,11 @@ export class BallsDeflectorsGame implements MiniGame {
         drawCircle(ctx2D, this.target.x, this.target.y, this.target.radius, "green")
 
         drawCircle(ctx2D, this.ball.x, this.ball.y, 5, "blue")
+
+        if (this.targetHitted) {
+            drawText(ctx2D, 10, 20, 'Bouces: ' + this.bouncesCount, '#d40707')
+            drawText(ctx2D, 10, 50, 'Time Played: ' + this.timePlayed, '#d40707')
+        }
 
         this.dirty = false
     }
