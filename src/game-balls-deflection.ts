@@ -13,6 +13,8 @@ enum Wall {
 }
 const walls: Wall[] = [Wall.TOP, Wall.RIGHT, Wall.BOTTOM, Wall.LEFT]
 
+const ANGLE1 = 45
+const ANGLE2 = 180 - ANGLE1
 export class BallsDeflectorsGame implements MiniGame {
 
     private deflectors: Deflector[] = []
@@ -52,30 +54,52 @@ export class BallsDeflectorsGame implements MiniGame {
                 this.deflectors.push({
                     x: (1 + col) * colSpace,
                     y: (1 + row) * rowSpace,
-                    angle: 45,
+                    angle: randomInt(0,2)===0 ? ANGLE1 : ANGLE2,
                     length: 10
                 })
             }
         }
 
-        // Starts in the top of the first column, going down
+        // Pick a random start for the ball
+        const randomBallStart = this.pickRandomPlaceInWall(ctx2D, cols, rows, colSpace, rowSpace)
         this.ball = {
-            x: colSpace,
-            y: 0,
-            direction: Direction.DOWN
+            x: randomBallStart.x,
+            y: randomBallStart.y,
+            direction: Direction.NONE
+        }
+        switch( randomBallStart.wall) {
+            case Wall.BOTTOM: this.ball.direction = Direction.UP;    break
+            case Wall.LEFT:   this.ball.direction = Direction.RIGHT; break
+            case Wall.RIGHT:  this.ball.direction = Direction.LEFT;  break
+            case Wall.TOP:    this.ball.direction = Direction.DOWN;  break
         }
 
-        const targetWall: Wall = walls[randomInt(0, 4)]
-        if (targetWall===Wall.TOP || targetWall===Wall.BOTTOM) {
-            this.target.x = randomInt(1, cols+1) * colSpace
-            this.target.y = targetWall===Wall.TOP ? 0 : ctx2D.canvas.height
-        } else {
-            this.target.x = targetWall===Wall.LEFT ? 0 : ctx2D.canvas.width
-            this.target.y = randomInt(1, rows+1) * rowSpace
+        // Pick a random target (different from the ball start)
+        let randomTarget: RandomPlaceInWall = {x: this.ball.x, y: this.ball.y, wall: Wall.TOP}
+        while( randomTarget.x===this.ball.x && randomTarget.y===this.ball.y) {
+            randomTarget = this.pickRandomPlaceInWall(ctx2D, cols, rows, colSpace, rowSpace)
         }
+        this.target.x = randomTarget.x
+        this.target.y = randomTarget.y
         this.target.radius = 10
 
         this.drawObjects(ctx2D)
+    }
+
+    private pickRandomPlaceInWall(ctx2D: CanvasRenderingContext2D, cols: number, rows: number, colSpace: number, rowSpace: number): RandomPlaceInWall {
+        const wall: Wall = walls[randomInt(0, 4)]
+        if (wall===Wall.TOP || wall===Wall.BOTTOM) {
+            return {
+                x: randomInt(1, cols+1) * colSpace,
+                y: wall===Wall.TOP ? 0 : ctx2D.canvas.height,
+                wall
+            }
+        }
+        return {
+            x: wall===Wall.LEFT ? 0 : ctx2D.canvas.width,
+            y: randomInt(1, rows+1) * rowSpace,
+            wall
+        }
     }
 
     public loop(ctx2D: CanvasRenderingContext2D, deltaMs: number): void {
@@ -115,16 +139,16 @@ export class BallsDeflectorsGame implements MiniGame {
                 this.ball.y = hittedDeflector.y
                 switch (this.ball.direction) {
                     case Direction.UP:
-                        this.ball.direction = hittedDeflector.angle===45 ? Direction.RIGHT : Direction.LEFT
+                        this.ball.direction = hittedDeflector.angle===ANGLE1 ? Direction.RIGHT : Direction.LEFT
                         break
                     case Direction.DOWN:
-                        this.ball.direction = hittedDeflector.angle===45 ? Direction.LEFT : Direction.RIGHT
+                        this.ball.direction = hittedDeflector.angle===ANGLE1 ? Direction.LEFT : Direction.RIGHT
                         break
                     case Direction.LEFT:
-                        this.ball.direction = hittedDeflector.angle===45 ? Direction.DOWN : Direction.UP
+                        this.ball.direction = hittedDeflector.angle===ANGLE1 ? Direction.DOWN : Direction.UP
                         break
                     case Direction.RIGHT:
-                        this.ball.direction = hittedDeflector.angle===45 ? Direction.UP : Direction.DOWN
+                        this.ball.direction = hittedDeflector.angle===ANGLE1 ? Direction.UP : Direction.DOWN
                         break
                 }
             }
@@ -150,7 +174,7 @@ export class BallsDeflectorsGame implements MiniGame {
 
         this.deflectors.forEach(deflector => {
             ctx2D.beginPath()
-            if (deflector.angle===45) {
+            if (deflector.angle===ANGLE1) {
                 ctx2D.moveTo(deflector.x+deflector.length, deflector.y-deflector.length)
                 ctx2D.lineTo(deflector.x-deflector.length, deflector.y+deflector.length)
             } else {
@@ -164,8 +188,8 @@ export class BallsDeflectorsGame implements MiniGame {
 
         drawCircle(ctx2D, this.ball.x, this.ball.y, 5, "blue")
 
+        drawText(ctx2D, 10, 20, 'Bouces: ' + this.bouncesCount, '#d40707')
         if (this.targetHitted) {
-            drawText(ctx2D, 10, 20, 'Bouces: ' + this.bouncesCount, '#d40707')
             drawText(ctx2D, 10, 50, 'Time Played: ' + this.timePlayed, '#d40707')
         }
 
@@ -201,4 +225,8 @@ type Ball = Point & {
 
 type Target = Point & {
     radius: number
+}
+
+type RandomPlaceInWall = Point & {
+    wall: Wall
 }
