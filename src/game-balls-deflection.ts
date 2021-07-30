@@ -26,6 +26,7 @@ export class BallsDeflectorsGame implements MiniGame {
     private targetHitted = false
     private timePlayed: number | undefined = undefined
     private bouncesCount: number = 0
+    private randomBallStart: RandomPlaceInWall = {x:-1, y:-1, wall: Wall.TOP}
 
     public initialize(ctx2D: CanvasRenderingContext2D, initTimeMs: number): void {
         this.initTimeMs = initTimeMs
@@ -42,6 +43,15 @@ export class BallsDeflectorsGame implements MiniGame {
             if (clickedDeflector) {
                 clickedDeflector.angle = 180 - clickedDeflector.angle
                 game.dirty = true
+            } else {
+                if (game.ball.direction===Direction.NONE && !game.targetHitted) {
+                    switch( game.randomBallStart.wall) {
+                        case Wall.BOTTOM: game.ball.direction = Direction.UP;    break
+                        case Wall.LEFT:   game.ball.direction = Direction.RIGHT; break
+                        case Wall.RIGHT:  game.ball.direction = Direction.LEFT;  break
+                        case Wall.TOP:    game.ball.direction = Direction.DOWN;  break
+                    }
+                }
             }
         }, false);
 
@@ -61,17 +71,11 @@ export class BallsDeflectorsGame implements MiniGame {
         }
 
         // Pick a random start for the ball
-        const randomBallStart = this.pickRandomPlaceInWall(ctx2D, cols, rows, colSpace, rowSpace)
+        this.randomBallStart = this.pickRandomPlaceInWall(ctx2D, cols, rows, colSpace, rowSpace)
         this.ball = {
-            x: randomBallStart.x,
-            y: randomBallStart.y,
+            x: this.randomBallStart.x,
+            y: this.randomBallStart.y,
             direction: Direction.NONE
-        }
-        switch( randomBallStart.wall) {
-            case Wall.BOTTOM: this.ball.direction = Direction.UP;    break
-            case Wall.LEFT:   this.ball.direction = Direction.RIGHT; break
-            case Wall.RIGHT:  this.ball.direction = Direction.LEFT;  break
-            case Wall.TOP:    this.ball.direction = Direction.DOWN;  break
         }
 
         // Pick a random target (different from the ball start)
