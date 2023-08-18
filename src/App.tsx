@@ -4,6 +4,7 @@ import { BouncingGame } from './game-bouncing'
 import { MiniGame } from './commons'
 import { MovingBallGame } from './game-moving-ball'
 import { BallsDeflectorsGame } from './game-balls-deflection'
+import { SnakeGame } from './game-snake'
 
 function App() {
 
@@ -73,6 +74,10 @@ function App() {
         restart(new BallsDeflectorsGame())
     }
     //--------------------------------------------------
+    function showSnakeGame() {
+        restart(new SnakeGame())
+    }
+    //--------------------------------------------------
     return (
         <div className="App">
             <canvas id="gameScreen" width="500" height="500"></canvas>
@@ -81,6 +86,7 @@ function App() {
                 <button className="GameSelectorButton" onClick={showMovingBallGame}>Moving Ball</button>
                 <button className="GameSelectorButton" onClick={showBouncingGame}>Bouncing Game</button>
                 <button className="GameSelectorButton" onClick={showDeflectorsGame}>Deflectors Game</button>
+                <button className="GameSelectorButton" onClick={showSnakeGame}>Snake</button>
             </div>
         </div>
     );

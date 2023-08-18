@@ -50,3 +50,19 @@ export function getRandomColor() {
     return color
 }
 //--------------------------------------------------
+export type BouncingObject = {
+    posX: number
+    posY: number
+    radius: number
+    speedX: number
+    speedY: number
+}
+export function wallsBouncing(ctx2D: CanvasRenderingContext2D, obj: BouncingObject) {
+    if (obj.posX <= obj.radius || obj.posX >= ctx2D.canvas.width - obj.radius) {
+        obj.speedX = -obj.speedX
+    }
+    if (obj.posY <= obj.radius || obj.posY >= ctx2D.canvas.height - obj.radius) {
+        obj.speedY = -obj.speedY
+    }
+}
+//--------------------------------------------------

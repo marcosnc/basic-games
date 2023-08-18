@@ -1,4 +1,4 @@
-import { drawCircle, drawText, getRandomColor, isAnyKeyPressed, KEY_A, KEY_D, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_S, KEY_UP, KEY_W, MiniGame, randomInt } from "./commons"
+import { drawCircle, drawText, getRandomColor, isAnyKeyPressed, KEY_A, KEY_D, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_S, KEY_UP, KEY_W, MiniGame, randomInt, wallsBouncing } from "./commons"
 
 // TODO:
 // - Review the formulas that generate the new speed vectors after collision to take into account the ball shapes and bounce them taking into account the collision angle.
@@ -120,12 +120,7 @@ export class BouncingGame implements MiniGame {
         let alreadyCollided = new Set<number>()
         for(let i=0; i<this.balls.length; i++) {
             let ball = this.balls[i]
-            if (ball.posX <= ball.radius || ball.posX >= ctx2D.canvas.width - ball.radius) {
-                ball.speedX = -ball.speedX
-            }
-            if (ball.posY <= ball.radius || ball.posY >= ctx2D.canvas.height - ball.radius) {
-                ball.speedY = -ball.speedY
-            }
+            wallsBouncing(ctx2D, ball)
             if (this.checkCollision(ball, this.player)) {
                 this.collisionsCount++
                 // This is not taking into account the collision angle
