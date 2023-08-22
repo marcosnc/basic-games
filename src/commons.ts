@@ -50,19 +50,33 @@ export function getRandomColor() {
     return color
 }
 //--------------------------------------------------
+function rgbComponentToColor(rgbComponent: number): string {
+    const stringComponent = (rgbComponent % 255).toString(16)
+    return (stringComponent.length === 1 ? "0" : "") + stringComponent
+}
+export function rgbToColor(red: number, green: number, blue: number): string {
+    return "#" + rgbComponentToColor(red) + rgbComponentToColor(green) + rgbComponentToColor(blue);
+}
+//--------------------------------------------------
+export type Vector2D = {
+    x: number
+    y: number
+}
+export const ORIGIN_2D: Vector2D = { x:0, y:0 }
+
 export type BouncingObject = {
-    posX: number
-    posY: number
+    pos: Vector2D
+    speed: Vector2D
     radius: number
-    speedX: number
-    speedY: number
 }
+
 export function wallsBouncing(ctx2D: CanvasRenderingContext2D, obj: BouncingObject) {
-    if (obj.posX <= obj.radius || obj.posX >= ctx2D.canvas.width - obj.radius) {
-        obj.speedX = -obj.speedX
+    if (obj.pos.x <= obj.radius || obj.pos.x >= ctx2D.canvas.width - obj.radius) {
+        obj.speed.x = -obj.speed.x
     }
-    if (obj.posY <= obj.radius || obj.posY >= ctx2D.canvas.height - obj.radius) {
-        obj.speedY = -obj.speedY
+    if (obj.pos.y <= obj.radius || obj.pos.y >= ctx2D.canvas.height - obj.radius) {
+        obj.speed.y = -obj.speed.y
     }
 }
+
 //--------------------------------------------------
